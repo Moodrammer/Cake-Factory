@@ -11,6 +11,10 @@
 #define productionBp 8
 #define cakeStandAp 9
 #define cakeStandBp 10
+#define rasberryValvePin 11
+#define pineappleValvePin 12
+#define standArm 14
+#define keypadPin 15
 
 #define stepsPerRevolution 64
 
@@ -22,9 +26,9 @@ unsigned long currentMillis;
 unsigned long openingTime;
 unsigned long waitTime;
 //phase control
-boolean makingPhase = true;
+boolean makingPhase = false;
 boolean bakingPhase = false;
-boolean decorationPhase = false;
+boolean decorationPhase = true;
 
 int motorStepCount = 0;
 //mixer motor variables
@@ -61,14 +65,20 @@ boolean isFlourAddingStarted = false;
 boolean isHeatingStarted = false;
 boolean isBeforeBaking = true;
 
+//decorationPhaseVaribles
+boolean isKeyRead = false;
+
 void setup() {
-  for(int i = 0; i <= 10; i++) pinMode(i, OUTPUT);
+  for(int i = 0; i <= 14; i++) pinMode(i, OUTPUT);
   //close all the valves
   closeValve(eggValvePin);
   closeValve(vanillaValvePin);
   closeValve(sugarValvePin);
   closeValve(flourValvePin);
+  moveArmToAngle(0);
   delay(500);
+
+  Serial.begin(9600);
 }
 
 void loop() {
@@ -179,8 +189,13 @@ void loop() {
     }
   }
   if(decorationPhase){
-    moveMotorForSteps(cakeStandAp, cakeStandBp, stepsPerRevolution, 15620);
-    delay(1000);
+     if(analogRead(keypadPin)){
+        if(!isKeyRead)
+          chooseDecoration();
+     }
+     else{
+      isKeyRead = false;
+     }
   }
 }
 
@@ -250,6 +265,13 @@ void closeValve(int valvePin){
   digitalWrite(valvePin, HIGH);
   delayMicroseconds(1000);
   digitalWrite(valvePin, LOW);
+}
+
+void moveArmToAngle(float angle){
+  int pulseDuration = 1000 + (angle/180) * 1000;
+  digitalWrite(standArm, HIGH);
+  delayMicroseconds(pulseDuration);
+  digitalWrite(standArm, LOW);
 }
 
 void addEggs(){
@@ -329,4 +351,43 @@ void addFlour(){
       addFlourTime = false;
     }
   }
+}
+
+void chooseDecoration(){
+  int reading = analogRead(keypadPin);
+  switch(reading){
+    case 852:
+      isKeyRead = true;
+      decorateOne();
+      break;
+    case 786:
+      isKeyRead = true;
+      Serial.println(2);
+      break;
+    case 730:
+      isKeyRead = true;
+      Serial.println(3);
+      break;
+    case 681:
+      isKeyRead = true;
+      Serial.println(4);
+      break;    
+  }
+}
+
+void decorateOne(){
+  //move arm to the outer track (track 0)
+  moveArmToAngle(0);
+  //Assume settlement Time for arm
+  delay(1000);
+  digitalWrite(rasberryValvePin, HIGH);
+  moveMotorForSteps(cakeStandAp, cakeStandBp, stepsPerRevolution, 15620);
+  digitalWrite(rasberryValvePin, LOW);
+
+  //move arm to track 2
+  moveArmToAngle(40);
+  delay(1000);
+  digitalWrite(pineappleValvePin, HIGH);
+  moveMotorForSteps(cakeStandAp, cakeStandBp, stepsPerRevolution, 15620);
+  digitalWrite(pineappleValvePin, LOW);
 }
