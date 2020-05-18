@@ -9,8 +9,10 @@
 #define ovenLedPin 6
 #define productionAp 7
 #define productionBp 8
+#define cakeStandAp 9
+#define cakeStandBp 10
 
-#define stepsPerRevolution 100
+#define stepsPerRevolution 64
 
 //Time it takes to go from 0 to 180 as its speed is 100ms / 60 degrees
 #define servoOpeningTime 300
@@ -28,7 +30,7 @@ int motorStepCount = 0;
 //mixer motor variables
 int mixerCurrentStep = 0;
 int numRotations = 0;
-int mixerDelay = 1;
+int mixerDelay = 1562;
 int currentRotations;
 boolean isMixerOn = false;
 boolean countRotations = false;
@@ -60,7 +62,7 @@ boolean isHeatingStarted = false;
 boolean isBeforeBaking = true;
 
 void setup() {
-  for(int i = 0; i <= 8; i++) pinMode(i, OUTPUT);
+  for(int i = 0; i <= 10; i++) pinMode(i, OUTPUT);
   //close all the valves
   closeValve(eggValvePin);
   closeValve(vanillaValvePin);
@@ -73,6 +75,11 @@ void loop() {
   currentMillis = millis();
   //Making Phase
   if(makingPhase){
+    if(isMixerOn){
+      moveMotor(mixerAp, mixerBp, mixerCurrentStep, mixerDelay);
+      mixerCurrentStep ++; 
+    }
+    
     if(countRotations){
       motorStepCount++;
       if(motorStepCount == stepsPerRevolution){
@@ -81,10 +88,6 @@ void loop() {
       }
     }
     
-    if(isMixerOn){
-      moveMotor(mixerAp, mixerBp, mixerCurrentStep, mixerDelay);
-      mixerCurrentStep ++; 
-    }
     
     if(!isEggsAdded){
       waitTime = servoOpeningTime + 500; 
@@ -111,7 +114,7 @@ void loop() {
           countRotations = false;
           isMixerOn = false;
           //reduce the motor Speed
-          mixerDelay = 2;
+          mixerDelay *= 2;
           currentRotations = numRotations;
           addFlourTime = true;
           addingFlourTimes++;
@@ -143,8 +146,8 @@ void loop() {
   }
   if(bakingPhase){
     if(isBeforeBaking){    
-      if(motorStepCount <= 100){
-        moveMotor(productionAp, productionBp, productionCurrentStep, 10);
+      if(motorStepCount <= stepsPerRevolution){
+        moveMotor(productionAp, productionBp, productionCurrentStep, 15620);
         productionCurrentStep ++;
         motorStepCount++;
       }
@@ -163,8 +166,8 @@ void loop() {
       }
     }
     else{
-        if(motorStepCount <= 100){
-          moveMotor(productionAp, productionBp, productionCurrentStep, 10);
+        if(motorStepCount <= stepsPerRevolution){
+          moveMotor(productionAp, productionBp, productionCurrentStep, 15620);
           productionCurrentStep ++;
           motorStepCount++;
         }
@@ -176,14 +179,15 @@ void loop() {
     }
   }
   if(decorationPhase){
-    
+    moveMotorForSteps(cakeStandAp, cakeStandBp, stepsPerRevolution, 15620);
+    delay(1000);
   }
 }
 
 //Move the stepper motor
-void moveMotor(int Ap,int Bp, int currentStep, int delayMillis){
+void moveMotor(int Ap,int Bp, int currentStep, int delayMicros){
   currentStep %= 4;
-  delay(delayMillis);
+  delayMicroseconds(delayMicros);
   switch(currentStep){
     case 0:
     digitalWrite(Ap, 1);
@@ -204,6 +208,36 @@ void moveMotor(int Ap,int Bp, int currentStep, int delayMillis){
     digitalWrite(Ap, 0);
     digitalWrite(Bp, 1);
    }
+}
+
+//Move the Stepper Motor for a certain number of steps
+void moveMotorForSteps(int Ap,int Bp, int numSteps, int delayMicros){
+  int currentStep = -1;
+  while(numSteps != 0){
+    currentStep = (currentStep + 1) % 4;
+    delayMicroseconds(delayMicros);
+    switch(currentStep){
+      case 0:
+      digitalWrite(Ap, 1);
+      digitalWrite(Bp, 1);
+      break;
+    
+      case 1:
+      digitalWrite(Ap, 1);
+      digitalWrite(Bp, 0);
+      break;
+    
+      case 2:
+      digitalWrite(Ap, 0);
+      digitalWrite(Bp, 0);
+      break;
+    
+      case 3:
+      digitalWrite(Ap, 0);
+      digitalWrite(Bp, 1);
+     }
+     numSteps --;
+  }  
 }
 
 void openValve(int valvePin){
