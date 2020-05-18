@@ -1,3 +1,5 @@
+//I assumed in baking phase that the oven led turns off after one second
+
 #define mixerAp 0
 #define mixerBp 1
 #define eggValvePin 2
@@ -5,6 +7,8 @@
 #define sugarValvePin 4
 #define flourValvePin 5
 #define ovenLedPin 6
+#define productionAp 7
+#define productionBp 8
 
 #define stepsPerRevolution 100
 
@@ -20,14 +24,16 @@ boolean makingPhase = true;
 boolean bakingPhase = false;
 boolean decorationPhase = false;
 
+int motorStepCount = 0;
 //mixer motor variables
 int mixerCurrentStep = 0;
 int numRotations = 0;
-int mixerStepCount = 0;
 int mixerDelay = 1;
 int currentRotations;
 boolean isMixerOn = false;
 boolean countRotations = false;
+//Production line variables
+int productionCurrentStep = 0;
 
 //valves control
 boolean isEggsAdded = false;
@@ -49,8 +55,12 @@ boolean isFlourValveOpened = false;
 boolean isFlourValveClosed = true;
 boolean isFlourAddingStarted = false;
 
+//Baking Phase variables
+boolean isHeatingStarted = false;
+boolean isBeforeBaking = true;
+
 void setup() {
-  for(int i = 0; i <= 5; i++) pinMode(i, OUTPUT);
+  for(int i = 0; i <= 8; i++) pinMode(i, OUTPUT);
   //close all the valves
   closeValve(eggValvePin);
   closeValve(vanillaValvePin);
@@ -64,10 +74,10 @@ void loop() {
   //Making Phase
   if(makingPhase){
     if(countRotations){
-      mixerStepCount++;
-      if(mixerStepCount == stepsPerRevolution){
+      motorStepCount++;
+      if(motorStepCount == stepsPerRevolution){
         numRotations++;
-        mixerStepCount = 0;  
+        motorStepCount = 0;  
       }
     }
     
@@ -126,14 +136,48 @@ void loop() {
           isFlourAdded = true;
           makingPhase = false;
           bakingPhase = true;
+          motorStepCount = 0;
         }
       }
     }
   }
   if(bakingPhase){
+    if(isBeforeBaking){    
+      if(motorStepCount <= 100){
+        moveMotor(productionAp, productionBp, productionCurrentStep, 10);
+        productionCurrentStep ++;
+        motorStepCount++;
+      }
+      else{
+        //Motor moved one full rotation
+        if(!isHeatingStarted){
+          openingTime = currentMillis;
+          digitalWrite(ovenLedPin, HIGH);
+          isHeatingStarted = true;
+        }
+        if(currentMillis - openingTime >= 1000){
+          digitalWrite(ovenLedPin, LOW);
+          motorStepCount = 0;
+          isBeforeBaking = false;
+        }
+      }
+    }
+    else{
+        if(motorStepCount <= 100){
+          moveMotor(productionAp, productionBp, productionCurrentStep, 10);
+          productionCurrentStep ++;
+          motorStepCount++;
+        }
+        else{
+          bakingPhase = false;
+          decorationPhase = true; 
+          delay(1000);     
+        }
+    }
+  }
+  if(decorationPhase){
     
   }
-
 }
 
 //Move the stepper motor
@@ -188,7 +232,7 @@ void addEggs(){
       isEggsAdded = true;
       isMixerOn = true;
       countRotations = true;
-      mixerStepCount = 0;
+      motorStepCount = 0;
     }
   }
 }
@@ -204,7 +248,7 @@ void addVanilla(){
     if(currentMillis - openingTime >= waitTime){
       if(currentMillis - openingTime >= servoOpeningTime){
         countRotations = true;
-        mixerStepCount = 0;
+        motorStepCount = 0;
         currentRotations = numRotations;
       }
       closeValve(vanillaValvePin);
@@ -228,7 +272,7 @@ void addSugar(){
       isSugarAdded = true;
       isMixerOn = true;
       countRotations = true;
-      mixerStepCount = 0;
+      motorStepCount = 0;
       currentRotations = numRotations;
     }
   }
@@ -247,7 +291,7 @@ void addFlour(){
       isFlourValveClosed = true;
       isMixerOn = true;
       countRotations = true;
-      mixerStepCount = 0;
+      motorStepCount = 0;
       addFlourTime = false;
     }
   }
