@@ -18,6 +18,13 @@
 
 #define stepsPerRevolution 64
 
+//The five tracks are ordered from the outer circle to the inner one
+#define track1Angle 0
+#define track2Angle 20
+#define track3Angle 40
+#define track4Angle 60
+#define track5Angle 80
+
 //Time it takes to go from 0 to 180 as its speed is 100ms / 60 degrees
 #define servoOpeningTime 300
 
@@ -26,9 +33,9 @@ unsigned long currentMillis;
 unsigned long openingTime;
 unsigned long waitTime;
 //phase control
-boolean makingPhase = false;
+boolean makingPhase = true;
 boolean bakingPhase = false;
-boolean decorationPhase = true;
+boolean decorationPhase = false;
 
 int motorStepCount = 0;
 //mixer motor variables
@@ -77,8 +84,6 @@ void setup() {
   closeValve(flourValvePin);
   moveArmToAngle(0);
   delay(500);
-
-  Serial.begin(9600);
 }
 
 void loop() {
@@ -267,11 +272,12 @@ void closeValve(int valvePin){
   digitalWrite(valvePin, LOW);
 }
 
-void moveArmToAngle(float angle){
-  int pulseDuration = 1000 + (angle/180) * 1000;
+void moveArmToAngle(int angle){
+  int pulseDuration = 1000 + (angle/180.0) * 1000;
   digitalWrite(standArm, HIGH);
   delayMicroseconds(pulseDuration);
   digitalWrite(standArm, LOW);
+  delayMicroseconds(20000 - pulseDuration);
 }
 
 void addEggs(){
@@ -362,32 +368,105 @@ void chooseDecoration(){
       break;
     case 786:
       isKeyRead = true;
-      Serial.println(2);
+      decorateTwo();
       break;
     case 730:
       isKeyRead = true;
-      Serial.println(3);
+      decorateThree();
       break;
     case 681:
       isKeyRead = true;
-      Serial.println(4);
+      decorateFour();
       break;    
   }
 }
 
 void decorateOne(){
-  //move arm to the outer track (track 0)
-  moveArmToAngle(0);
+  //move arm to the outer track (track 1)
+  moveArmToAngle(track1Angle);
   //Assume settlement Time for arm
   delay(1000);
   digitalWrite(rasberryValvePin, HIGH);
   moveMotorForSteps(cakeStandAp, cakeStandBp, stepsPerRevolution, 15620);
   digitalWrite(rasberryValvePin, LOW);
 
-  //move arm to track 2
-  moveArmToAngle(40);
+  //move arm to track 3
+  moveArmToAngle(track3Angle);
   delay(1000);
   digitalWrite(pineappleValvePin, HIGH);
   moveMotorForSteps(cakeStandAp, cakeStandBp, stepsPerRevolution, 15620);
   digitalWrite(pineappleValvePin, LOW);
+}
+
+void decorateTwo(){
+  for(int i = 1; i <= 4; i++){
+    moveArmToAngle(track1Angle);
+    delay(1000);
+    digitalWrite(rasberryValvePin, HIGH);
+    moveMotorForSteps(cakeStandAp, cakeStandBp, stepsPerRevolution / 8, 15620);
+    digitalWrite(rasberryValvePin, LOW);
+    delay(1000);
+
+    moveArmToAngle(track3Angle);
+    delay(1000);
+    digitalWrite(pineappleValvePin, HIGH);
+    moveMotorForSteps(cakeStandAp, cakeStandBp, stepsPerRevolution / 8, 15620);
+    digitalWrite(pineappleValvePin, LOW);
+    delay(1000);
+  }
+}
+
+void decorateThree(){
+  //pineApple Circle
+  moveArmToAngle(track5Angle);
+  delay(1000);
+  digitalWrite(pineappleValvePin, HIGH);
+  delay(1000);
+  digitalWrite(pineappleValvePin, LOW);
+
+  //add 16 circles of rasberry
+  moveArmToAngle(track1Angle);
+  delay(1000);
+  for(int i = 1; i <= 16; i++){
+    digitalWrite(rasberryValvePin, HIGH);
+    delay(1000);
+    digitalWrite(rasberryValvePin, LOW);
+    moveMotorForSteps(cakeStandAp, cakeStandBp, stepsPerRevolution / 16, 15620);
+    delay(1000);
+  }
+}
+
+void decorateFour(){
+  //large middle rasberry Circle
+  moveArmToAngle(track5Angle);
+  delay(1000);
+  digitalWrite(rasberryValvePin, HIGH);
+  delay(1000);
+  digitalWrite(rasberryValvePin, LOW);
+
+  moveArmToAngle(track4Angle);
+  delay(1000);
+  digitalWrite(rasberryValvePin, HIGH);
+  moveMotorForSteps(cakeStandAp, cakeStandBp, stepsPerRevolution, 15620);
+  digitalWrite(rasberryValvePin, LOW);
+
+  //alternating rasberry and pineapple circles assume they are 16
+  //assume the even ones are rasberry and the odd ones are pineapple
+  moveArmToAngle(track1Angle);
+  delay(1000);
+  for(int i = 1; i <= 16; i++){
+    if(i % 2 == 0){
+      digitalWrite(rasberryValvePin, HIGH);
+      delay(1000);
+      digitalWrite(rasberryValvePin, LOW);
+    }
+    else{
+      digitalWrite(pineappleValvePin, HIGH);
+      delay(1000);
+      digitalWrite(pineappleValvePin, LOW);
+      
+    }
+    moveMotorForSteps(cakeStandAp, cakeStandBp, stepsPerRevolution / 16, 15620);
+    delay(1000);
+  }  
 }

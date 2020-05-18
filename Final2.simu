@@ -40,7 +40,7 @@ Node-118:
 <item objectName="Node-118" rotation="0" labely="-24" Show_id="false" labelrot="0" vflip="1" x="220" labelx="-16" valLabelx="0" itemtype="Node" id="Node-118" valLabRot="0" hflip="1" y="-300" valLabely="0"/>
  
 Servo-113: 
-<item objectName="Servo-113" rotation="0" labely="-40" Show_id="true" labelrot="0" vflip="1" x="708" labelx="-16" valLabelx="0" itemtype="Servo" id="arm" valLabRot="0" hflip="1" y="-404" Speed="0.20000000000000001" valLabely="0"/>
+<item objectName="Servo-113" rotation="0" labely="-40" Show_id="true" labelrot="0" vflip="1" x="708" labelx="-16" valLabelx="0" itemtype="Servo" id="arm" valLabRot="0" hflip="1" y="-404" Speed="0.10000000000000001" valLabely="0"/>
  
 TextComponent-112: 
 <item id="TextComponent-71" Border="1" Show_id="false" Fixed_Width="true" x="572" rotation="0" itemtype="TextComponent" y="-252" labely="-24" valLabelx="0" objectName="TextComponent-112" Font_Size="10" hflip="1" labelx="-16" Font="Helvetica [Cronyx]" valLabely="0" labelrot="0" Margin="5" vflip="1" valLabRot="0" Text="... rasberry ..."/>
