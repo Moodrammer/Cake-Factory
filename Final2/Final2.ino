@@ -4,6 +4,7 @@
 #define vanillaValvePin 3
 #define sugarValvePin 4
 #define flourValvePin 5
+#define ovenLedPin 6
 
 #define stepsPerRevolution 100
 
@@ -14,6 +15,10 @@
 unsigned long currentMillis;
 unsigned long openingTime;
 unsigned long waitTime;
+//phase control
+boolean makingPhase = true;
+boolean bakingPhase = false;
+boolean decorationPhase = false;
 
 //mixer motor variables
 int mixerCurrentStep = 0;
@@ -56,69 +61,78 @@ void setup() {
 
 void loop() {
   currentMillis = millis();
-  if(countRotations){
-    mixerStepCount++;
-    if(mixerStepCount == stepsPerRevolution){
-      numRotations++;
-      mixerStepCount = 0;  
+  //Making Phase
+  if(makingPhase){
+    if(countRotations){
+      mixerStepCount++;
+      if(mixerStepCount == stepsPerRevolution){
+        numRotations++;
+        mixerStepCount = 0;  
+      }
     }
-  }
+    
+    if(isMixerOn){
+      moveMotor(mixerAp, mixerBp, mixerCurrentStep, mixerDelay);
+      mixerCurrentStep ++; 
+    }
+    
+    if(!isEggsAdded){
+      waitTime = servoOpeningTime + 500; 
+      addEggs();
+    }
   
-  if(isMixerOn){
-    moveMotor(mixerAp, mixerBp, mixerCurrentStep, mixerDelay);
-    mixerCurrentStep ++; 
-  }
-  
-  if(!isEggsAdded){
-    waitTime = servoOpeningTime + 500; 
-    addEggs();
-  }
-
-  if(numRotations == 5 && !isVanillaAdded){
-    countRotations = false;
-    waitTime = servoOpeningTime + 100;
-    addVanilla();
-  }
-
-  if(isVanillaAdded && !isSugarAdded){
-    if(numRotations - currentRotations == 4){
+    if(numRotations == 5 && !isVanillaAdded){
       countRotations = false;
-      isMixerOn = false;
-      waitTime = servoOpeningTime + 200;
-      addSugar();
+      waitTime = servoOpeningTime + 100;
+      addVanilla();
     }
-  }
-
-  if(isSugarAdded && !isFlourAdded){
-    if(numRotations - currentRotations == 10){
+  
+    if(isVanillaAdded && !isSugarAdded){
+      if(numRotations - currentRotations == 4){
         countRotations = false;
         isMixerOn = false;
-        //reduce the motor Speed
-        mixerDelay = 2;
-        currentRotations = numRotations;
-        addFlourTime = true;
-        addingFlourTimes++;
-        isFlourAddingStarted = true;
-    }
-
-    if(addFlourTime){
-      waitTime = servoOpeningTime + 100;
-      addFlour();
-    }
-    if(numRotations - currentRotations == 4 && isFlourAddingStarted){
-      isMixerOn = false;
-      countRotations = false;
-      currentRotations = numRotations;
-      if(addingFlourTimes != 3){
-        addingFlourTimes++;
-        addFlourTime = true;
-        isFlourValveOpened = false;
-        isFlourValveClosed = true;
+        waitTime = servoOpeningTime + 200;
+        addSugar();
       }
-      else isFlourAdded = true;
+    }
+  
+    if(isSugarAdded && !isFlourAdded){
+      if(numRotations - currentRotations == 10){
+          countRotations = false;
+          isMixerOn = false;
+          //reduce the motor Speed
+          mixerDelay = 2;
+          currentRotations = numRotations;
+          addFlourTime = true;
+          addingFlourTimes++;
+          isFlourAddingStarted = true;
+      }
+  
+      if(addFlourTime){
+        waitTime = servoOpeningTime + 100;
+        addFlour();
+      }
+      if(numRotations - currentRotations == 4 && isFlourAddingStarted){
+        isMixerOn = false;
+        countRotations = false;
+        currentRotations = numRotations;
+        if(addingFlourTimes != 3){
+          addingFlourTimes++;
+          addFlourTime = true;
+          isFlourValveOpened = false;
+          isFlourValveClosed = true;
+        }
+        else{
+          isFlourAdded = true;
+          makingPhase = false;
+          bakingPhase = true;
+        }
+      }
     }
   }
-  
+  if(bakingPhase){
+    
+  }
 
 }
 
@@ -174,6 +188,7 @@ void addEggs(){
       isEggsAdded = true;
       isMixerOn = true;
       countRotations = true;
+      mixerStepCount = 0;
     }
   }
 }
@@ -189,6 +204,7 @@ void addVanilla(){
     if(currentMillis - openingTime >= waitTime){
       if(currentMillis - openingTime >= servoOpeningTime){
         countRotations = true;
+        mixerStepCount = 0;
         currentRotations = numRotations;
       }
       closeValve(vanillaValvePin);
@@ -212,6 +228,7 @@ void addSugar(){
       isSugarAdded = true;
       isMixerOn = true;
       countRotations = true;
+      mixerStepCount = 0;
       currentRotations = numRotations;
     }
   }
@@ -230,6 +247,7 @@ void addFlour(){
       isFlourValveClosed = true;
       isMixerOn = true;
       countRotations = true;
+      mixerStepCount = 0;
       addFlourTime = false;
     }
   }
