@@ -210,23 +210,24 @@ void moveMotor(int Ap,int Bp, int currentStep, int delayMicros){
   delayMicroseconds(delayMicros);
   switch(currentStep){
     case 0:
-    digitalWrite(Ap, 1);
-    digitalWrite(Bp, 1);
+    digitalWrite(Ap, 0);
+    digitalWrite(Bp, 0);
     break;
   
     case 1:
-    digitalWrite(Ap, 1);
-    digitalWrite(Bp, 0);
-    break;
-  
-    case 2:
     digitalWrite(Ap, 0);
-    digitalWrite(Bp, 0);
+    digitalWrite(Bp, 1);
+    break;
+
+
+    case 2:
+    digitalWrite(Ap, 1);
+    digitalWrite(Bp, 1);
     break;
   
     case 3:
-    digitalWrite(Ap, 0);
-    digitalWrite(Bp, 1);
+    digitalWrite(Ap, 1);
+    digitalWrite(Bp, 0);  
    }
 }
 
@@ -238,23 +239,24 @@ void moveMotorForSteps(int Ap,int Bp, int numSteps, int delayMicros){
     delayMicroseconds(delayMicros);
     switch(currentStep){
       case 0:
-      digitalWrite(Ap, 1);
-      digitalWrite(Bp, 1);
+      digitalWrite(Ap, 0);
+      digitalWrite(Bp, 0);
       break;
     
       case 1:
-      digitalWrite(Ap, 1);
-      digitalWrite(Bp, 0);
-      break;
-    
-      case 2:
       digitalWrite(Ap, 0);
-      digitalWrite(Bp, 0);
+      digitalWrite(Bp, 1);
+      break;
+
+      
+      case 2:
+      digitalWrite(Ap, 1);
+      digitalWrite(Bp, 1);
       break;
     
       case 3:
-      digitalWrite(Ap, 0);
-      digitalWrite(Bp, 1);
+      digitalWrite(Ap, 1);
+      digitalWrite(Bp, 0);    
      }
      numSteps --;
   }  
