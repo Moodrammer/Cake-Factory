@@ -1,4 +1,10 @@
-//I assumed in baking phase that the oven led turns off after one second
+//Notes About my Solution:
+//-----------------------
+//- I assumed in baking phase that the oven led turns off after one second (after we finish baking the cake)
+//- Details about the decoration phase are present also in simu file
+//   In decoration the cake is like a platter with one divided into five tracks track1 is the outer circle while track5 is the inner circle
+//   Each arm servo angle corresponds to a track where 0 degrees --> track1 , 20 degrees --> track2, 40 degrees --> track3, 60 degrees --> track4, 80 degrees --> track5 (Inner circle)
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #define mixerAp 0
 #define mixerBp 1
